@@ -1,0 +1,30 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<mission>
+    <parameters>
+        <initial_takeoff_height>1.5</initial_takeoff_height>
+  <switch_height>1.0</switch_height>
+  
+  <waypoints>
+    <waypoint>
+      <x>1.0</x>
+      <y>0.0</y>
+      <z>1.5</z>
+    
+    <waypoint>
+      <x>2.0</x>
+      <y>1.0</y>
+      <z>1.5</z>
+    </waypoint>
+    
+    <waypoint>
+      <x>1.0</x>
+      <y>2.0</y>
+      <z>1.5</z>
+    </waypoint>
+    
+    <waypoint>
+      <x>0.0</x>
+      <y>0.0</y>
+      <z>1.5</z>
+    </waypoint>
+</mission>

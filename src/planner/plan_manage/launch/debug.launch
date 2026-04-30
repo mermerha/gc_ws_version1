@@ -1,0 +1,3 @@
+<launch>
+  <node pkg="ego_planner" name="auto_target" type="auto_target_send.py" output="screen"/>
+</launch>

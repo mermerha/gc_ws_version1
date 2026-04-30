@@ -1,0 +1,24 @@
+# ROS
+build/
+devel/
+install/
+.catkin_workspace
+log/
+
+# IDE / Editor
+.vscode/
+.claude/
+
+# Data and large files
+bag/
+*.bag
+*.pdf
+pdf_text.txt
+
+# Python
+__pycache__/
+*.pyc
+
+# OS generated files
+.DS_Store
+Thumbs.db

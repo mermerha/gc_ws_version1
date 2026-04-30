@@ -1,0 +1,1 @@
+uint8 takeoff_land_cmd   # 1=起飞, 2=降落, 0=取消

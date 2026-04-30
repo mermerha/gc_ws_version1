@@ -1,0 +1,10 @@
+<launch>
+    <!-- 加载配置文件中的参数 -->
+    <rosparam command="load" file="$(find mission_control)/config/mission_params_new.yaml" />
+
+    <!-- 启动节点并使用加载的参数 --> <!-- 0:过门不加点  1:过门加点  2:不过门不加点  3:不过门加点 -->
+    <node name="mission_control" pkg="mission_control" type="mission_new" output="screen">
+        <!-- 如果需要，可以在这里覆盖某些参数 -->
+        <!-- <param name="fly_height" value="1.2" /> -->
+    </node>
+</launch>

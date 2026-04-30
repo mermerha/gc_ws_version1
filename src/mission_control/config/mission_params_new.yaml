@@ -1,0 +1,15 @@
+mission_control:
+  fly_height: 1.2
+
+
+  point1_x: 3.2
+  point1_y: 0.0
+
+  point2_x: 3.4
+  point2_y: 3.2
+
+  point3_x: 3.0
+  point3_y: 3.2
+
+  point4_x: 2.4
+  point4_y: 3.2
