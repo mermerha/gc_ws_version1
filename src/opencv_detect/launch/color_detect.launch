@@ -17,7 +17,6 @@
     <node name="color_detect_node" pkg="opencv_detect" type="color_detect_node.py" output="screen">
         <param name="image_topic" value="$(arg image_topic)" />
         <param name="min_pixel_threshold" value="500" />
-        <param name="vote_count" value="5" />
         <param name="roi_ratio" value="0.6" />
     </node>
 </launch>

@@ -14,7 +14,6 @@ find_package(catkin REQUIRED COMPONENTS
   rospy
   std_msgs
   quadrotor_msgs
-  opencv_detect
 )
 
 ## System dependencies are found with CMake's conventions
@@ -74,7 +73,6 @@ add_service_files(
 generate_messages(
   DEPENDENCIES
   std_msgs
-  opencv_detect
 )
 
 ################################################
@@ -109,7 +107,7 @@ generate_messages(
 catkin_package(
 #  INCLUDE_DIRS include
 #  LIBRARIES mission_control
- CATKIN_DEPENDS message_runtime roscpp rospy std_msgs opencv_detect
+ CATKIN_DEPENDS message_runtime roscpp rospy std_msgs
 #  DEPENDS system_lib
 )
 
