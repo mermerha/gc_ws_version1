@@ -1,0 +1,23 @@
+<launch>
+    <!-- USB Camera Node -->
+    <arg name="camera_device" default="/dev/video0" />
+    <arg name="image_topic" default="/usb_cam/image_raw" />
+
+    <node name="usb_cam" pkg="usb_cam" type="usb_cam_node" output="screen">
+        <param name="video_device" value="$(arg camera_device)" />
+        <param name="image_width" value="640" />
+        <param name="image_height" value="480" />
+        <param name="pixel_format" value="yuyv" />
+        <param name="framerate" value="15" />
+        <param name="camera_name" value="usb_cam" />
+        <param name="io_method" value="mmap" />
+    </node>
+
+    <!-- Color Detection Node -->
+    <node name="color_detect_node" pkg="opencv_detect" type="color_detect_node.py" output="screen">
+        <param name="image_topic" value="$(arg image_topic)" />
+        <param name="min_pixel_threshold" value="500" />
+        <param name="vote_count" value="5" />
+        <param name="roi_ratio" value="0.6" />
+    </node>
+</launch>
