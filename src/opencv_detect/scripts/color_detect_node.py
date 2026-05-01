@@ -62,6 +62,12 @@ class ColorDetector:
         mask_g = cv2.inRange(hsv, np.array([35, 80, 50]), np.array([85, 255, 255]))
         mask_b = cv2.inRange(hsv, np.array([100, 80, 50]), np.array([130, 255, 255]))
 
+        # 形态学开运算去噪
+        kernel = cv2.getStructuringElement(cv2.MORPH_ELLIPSE, (5, 5))
+        mask_r = cv2.morphologyEx(mask_r, cv2.MORPH_OPEN, kernel)
+        mask_g = cv2.morphologyEx(mask_g, cv2.MORPH_OPEN, kernel)
+        mask_b = cv2.morphologyEx(mask_b, cv2.MORPH_OPEN, kernel)
+
         rc = cv2.countNonZero(mask_r)
         gc = cv2.countNonZero(mask_g)
         bc = cv2.countNonZero(mask_b)

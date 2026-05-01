@@ -95,6 +95,7 @@ private:
     // 颜色
     int latest_color;        // 来自话题的实时颜色
     int color_store;         // 在 A 点记住的颜色
+    int color_votes[4];      // 颜色投票计数 [0~3]
     Point color_endpoints[4]; // 1=R终点, 2=G终点, 3=B终点
     string color_names[4] = {"UNKNOWN", "RED", "GREEN", "BLUE"};
 
@@ -158,22 +159,27 @@ private:
             pub_flag = 0;
         }
 
-        // 到达判定
-        if (distance() < tolerance) {
-            int arrived_point = current_point_idx + 1; // 转为 1-indexed
-            ROS_INFO("[NAVIGATING] Arrived at point %d", arrived_point);
+        // 到达判定（加超时保护：15秒）
+        bool arrived = (distance() < tolerance);
+        bool timeout = (ros::Time::now() - start_time > ros::Duration(15.0));
+
+        if (arrived || timeout) {
+            int arrived_point = current_point_idx + 1;
+            if (timeout && !arrived) {
+                ROS_WARN("[NAVIGATING] Timeout at point %d, forcing advance", arrived_point);
+            } else {
+                ROS_INFO("[NAVIGATING] Arrived at point %d", arrived_point);
+            }
 
             if (arrived_point == a_point_index) {
-                // 到达 A 点 → 识别颜色
                 state = State::IDENTIFY_COLOR;
+                color_votes[0] = color_votes[1] = color_votes[2] = color_votes[3] = 0;
                 start_time = ros::Time::now();
             } else if (arrived_point == b_point_index) {
-                // 到达 B 点 → 飞向颜色终点
                 state = State::TO_COLOR_ENDPOINT;
                 pub_flag = 1;
                 start_time = ros::Time::now();
             } else {
-                // 普通航点 → 飞下一个
                 current_point_idx++;
                 pub_flag = 1;
                 start_time = ros::Time::now();
@@ -182,17 +188,33 @@ private:
     }
 
     /**
-     * 在 A 点：读取当前相机识别到的颜色，记住它
+     * 在 A 点：悬停等待，多次采样取众数确定颜色
      */
     void identifyColor() {
-        color_store = latest_color;
-        if (color_store == 0) color_store = 1; // 防止未识别
+        // 悬停采样 2 秒，每帧投票
+        if (ros::Time::now() - start_time < ros::Duration(2.0)) {
+            if (latest_color >= 1 && latest_color <= 3) {
+                color_votes[latest_color]++;
+            }
+            return; // 等待采样
+        }
+
+        // 统计投票结果
+        int best = 1, max_votes = color_votes[1];
+        for (int i = 2; i <= 3; i++) {
+            if (color_votes[i] > max_votes) {
+                max_votes = color_votes[i];
+                best = i;
+            }
+        }
+        color_store = best;
 
         ROS_INFO("======================================================");
-        ROS_INFO("  [TASK 7] A区识别颜色: >>> %s <<<", color_names[color_store].c_str());
+        ROS_INFO("  [TASK 7] A区识别颜色: >>> %s <<< (votes: R=%d G=%d B=%d)",
+                 color_names[color_store].c_str(),
+                 color_votes[1], color_votes[2], color_votes[3]);
         ROS_INFO("======================================================");
 
-        // 继续飞下一个航点
         current_point_idx++;
         pub_flag = 1;
         start_time = ros::Time::now();
@@ -200,7 +222,7 @@ private:
     }
 
     /**
-     * 飞向颜色对应的终点站
+     * 飞向颜色对应的终点站（加超时保护：15秒）
      */
     void toColorEndpoint() {
         if (pub_flag) {
@@ -216,17 +238,29 @@ private:
             pub_flag = 0;
         }
 
-        if (distance() < tolerance) {
+        bool arrived = (distance() < tolerance);
+        bool timeout = (ros::Time::now() - start_time > ros::Duration(15.0));
+
+        if (arrived || timeout) {
+            if (timeout && !arrived) {
+                ROS_WARN("[TO_COLOR_ENDPOINT] Timeout, forcing advance");
+            } else {
+                ROS_INFO("[TO_COLOR_ENDPOINT] Arrived at %s endpoint", color_names[color_store].c_str());
+            }
             state = State::VERIFY_COLOR;
             start_time = ros::Time::now();
-            ROS_INFO("[TO_COLOR_ENDPOINT] Arrived at %s endpoint", color_names[color_store].c_str());
         }
     }
 
     /**
-     * 在终点验证颜色：读取当前相机看到的颜色，和 A 点记住的比对
+     * 在终点验证颜色：悬停1秒后采样验证
      */
     void verifyColor() {
+        // 悬停等待 1 秒让相机稳定
+        if (ros::Time::now() - start_time < ros::Duration(1.0)) {
+            return;
+        }
+
         int current = latest_color;
         if (current == color_store) {
             ROS_INFO("======================================================");
