@@ -110,10 +110,39 @@ mask_b = cv2.morphologyEx(mask_b, cv2.MORPH_OPEN, kernel)
 
 ## 修改总结
 
-| 问题 | 修复方式 |
-|------|----------|
-| navigate 无超时 | 恢复 15 秒超时保护 |
-| identifyColor 无等待 | 悬停 2 秒 + 投票取众数 |
-| toColorEndpoint 无超时 | 添加 15 秒超时保护 |
-| verifyColor 无等待 | 悬停 1 秒后再采样 |
-| Python 缺形态学滤波 | 恢复 morphologyEx 开运算 |
+| 问题                   | 修复方式                 |
+| ---------------------- | ------------------------ |
+| navigate 无超时        | 恢复 15 秒超时保护       |
+| identifyColor 无等待   | 悬停 2 秒 + 投票取众数   |
+| toColorEndpoint 无超时 | 添加 15 秒超时保护       |
+| verifyColor 无等待     | 悬停 1 秒后再采样        |
+| Python 缺形态学滤波    | 恢复 morphologyEx 开运算 |
+
+---
+
+## 3. 夹爪控制与任务流程升级 (2026-05-09)
+
+### 3.1 新增 `claw_control` 包
+独立封装夹爪控制逻辑，解耦硬件与状态机：
+- 将原有独立脚本重构为 ROS Service Node (`claw_service_node.py`)
+- 提供 `/claw/grab` 和 `/claw/release` 两个服务端接口
+- 在 `claw_params.yaml` 中配置 `0.0°` (松开) 和 `50.0°` (夹紧)，以及防浪涌的 `move_interval`
+
+### 3.2 状态机改造 (`control_new.cpp`)
+- **新增抓球/投球状态**：引入 `GRAB_BALL`, `TO_DROP_POINT`, `DESCEND_TO_DROP`, `DROP_BALL` 4个新状态，形成完整任务闭环。
+- **解耦高度控制**：为每个航点增加了独立的高度参数 (`pointX_z`)，废弃全局统一的 `fly_height`。
+- **异常容错Fallback**：在 `IDENTIFY_COLOR` 状态中，如果 2 秒内未识别到任何有效颜色，将自动悬停满 5 秒，并使用配置的 `default_color` 作为兜底，保证任务不断链。
+
+### 3.3 配置更新 (`mission_params_new.yaml`)
+- 增加 `default_color` 参数（默认 1=Red）。
+- 增加各个颜色的投球点坐标及投球时的下降高度 `drop_height` (0.6m)。
+- 将原有的 `color_end` 参数更名为 `land` 以区分降落点和投球点。
+
+### 3.4 Launch 级联 (`missioncontrol.launch`)
+- 在主 launch 文件中自动 `include` 了 `claw.launch`。
+
+### 3.5 代码审查后的精细化改进
+- **增强颜色识别**：将 `identifyColor()` 的投票采样时间从 2 秒延长至 4 秒，充分利用悬停时间提高准确率。
+- **提高投球精度**：将 `descendToDrop()` 的高度判断容差从 `0.15m` 缩小至 `0.10m`。
+- **降落高度安全**：在 `mission_params_new.yaml` 新增 `land_r/g/b_z`，使飞向降落点时有独立、安全的巡航高度。
+- **抓球容错机制**：在 `grabBall()` 增加了最大 3 次的服务重试逻辑，防止因瞬间通信故障导致的流程卡死。

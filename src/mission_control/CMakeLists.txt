@@ -13,6 +13,7 @@ find_package(catkin REQUIRED COMPONENTS
   roscpp
   rospy
   std_msgs
+  std_srvs
   quadrotor_msgs
 )
 
@@ -107,7 +108,7 @@ generate_messages(
 catkin_package(
 #  INCLUDE_DIRS include
 #  LIBRARIES mission_control
- CATKIN_DEPENDS message_runtime roscpp rospy std_msgs
+ CATKIN_DEPENDS message_runtime roscpp rospy std_msgs std_srvs
 #  DEPENDS system_lib
 )
 

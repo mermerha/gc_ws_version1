@@ -1,38 +1,64 @@
 mission_control:
-  fly_height: 1.2
   tolerance: 0.3
-
+  
   # 总航点数
   num_points: 5
-
-  # A区是第几个点 (在此点读取颜色)
+  
+  # A区是第几个点 (在此点读取颜色并抓球)
   a_point_index: 2
-
-  # B区是第几个点 (到达后根据颜色飞向对应终点)
+  
+  # B区是第几个点 (到达后飞向对应颜色的投球点)
   b_point_index: 5
-
-  # ---- 航点坐标 (按需增减) ----
+  
+  # 默认兜底颜色 (1=Red, 2=Green, 3=Blue) 当A区未能成功读取颜色时使用
+  default_color: 1
+  
+  # ---- 航点坐标与独立高度 ----
   point1_x: 3.2
   point1_y: 0.0
-
+  point1_z: 1.2
+  
   point2_x: 3.4
   point2_y: 3.2
-
+  point2_z: 1.0  # A点识别与抓球高度，比巡航稍低
+  
   point3_x: 3.0
   point3_y: 3.2
-
+  point3_z: 1.2
+  
   point4_x: 2.4
   point4_y: 3.2
-
+  point4_z: 1.2
+  
   point5_x: 1.5
   point5_y: 2.0
-
-  # ---- 三种颜色的终点坐标 ----
-  color_end_r_x: 2.0
-  color_end_r_y: 3.0
-
-  color_end_g_x: 2.0
-  color_end_g_y: 3.5
-
-  color_end_b_x: 2.0
-  color_end_b_y: 4.0
+  point5_z: 1.2
+  
+  # ---- 三色投球点坐标 ----
+  drop_r_x: 2.0
+  drop_r_y: 3.0
+  drop_r_z: 1.2  # 飞向红区投球点时的巡航高度
+  
+  drop_g_x: 2.0
+  drop_g_y: 3.5
+  drop_g_z: 1.2  # 飞向绿区投球点时的巡航高度
+  
+  drop_b_x: 2.0
+  drop_b_y: 4.0
+  drop_b_z: 1.2  # 飞向蓝区投球点时的巡航高度
+  
+  # 投球时下降的目标高度
+  drop_height: 0.6
+  
+  # ---- 三色降落点坐标 (投球后飞往此处上方再降落) ----
+  land_r_x: 2.0
+  land_r_y: 3.0
+  land_r_z: 1.2
+  
+  land_g_x: 2.0
+  land_g_y: 3.5
+  land_g_z: 1.2
+  
+  land_b_x: 2.0
+  land_b_y: 4.0
+  land_b_z: 1.2

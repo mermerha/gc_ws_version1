@@ -1,0 +1,4 @@
+<launch>
+    <rosparam command="load" file="$(find claw_control)/config/claw_params.yaml" />
+    <node name="claw_service" pkg="claw_control" type="claw_service_node.py" output="screen" />
+</launch>
