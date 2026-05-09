@@ -48,6 +48,7 @@ public:
 
         // A 点和 B 点的索引 (1-indexed，和 yaml 里 point1, point2... 对应)
         nh.param<int>("/mission_control/a_point_index", a_point_index, 2);
+        nh.param<int>("/mission_control/grab_point_index", grab_point_index, 3);
         nh.param<int>("/mission_control/b_point_index", b_point_index, 5);
         nh.param<int>("/mission_control/default_color", default_color, 1);
 
@@ -128,8 +129,9 @@ private:
     int num_points;
     int current_point_idx;   // 0-indexed
 
-    // A/B 索引 (1-indexed)
+    // A/B/抓球 索引 (1-indexed)
     int a_point_index;
+    int grab_point_index;
     int b_point_index;
     int default_color;
 
@@ -219,6 +221,11 @@ private:
                 state = State::IDENTIFY_COLOR;
                 color_votes[0] = color_votes[1] = color_votes[2] = color_votes[3] = 0;
                 start_time = ros::Time::now();
+            } else if (arrived_point == grab_point_index) {
+                state = State::GRAB_BALL;
+                pub_flag = 1;
+                grab_retries = 0;
+                start_time = ros::Time::now();
             } else if (arrived_point == b_point_index) {
                 state = State::TO_DROP_POINT; // [修改] 到达B点后，下一步是飞去投球点
                 pub_flag = 1;
@@ -269,10 +276,11 @@ private:
         // 满足规则：A区停留满5秒
         if (ros::Time::now() - start_time < ros::Duration(5.0)) return;
 
-        state = State::GRAB_BALL;
+        // [修改] 识别完成后不直接抓球，而是飞向下一个目标（抓球点）
+        current_point_idx++;
         pub_flag = 1;
-        grab_retries = 0; // 重置重试次数
         start_time = ros::Time::now();
+        state = State::NAVIGATING;
     }
 
     /**
@@ -473,7 +481,8 @@ private:
     double distance() {
         double dx = goal_with_id.goal[0] - position_3d.pose.position.x;
         double dy = goal_with_id.goal[1] - position_3d.pose.position.y;
-        return sqrt(dx * dx + dy * dy);
+        double dz = goal_with_id.goal[2] - position_3d.pose.position.z;
+        return sqrt(dx * dx + dy * dy + dz * dz);
     }
 };
 

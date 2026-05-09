@@ -146,3 +146,7 @@ mask_b = cv2.morphologyEx(mask_b, cv2.MORPH_OPEN, kernel)
 - **提高投球精度**：将 `descendToDrop()` 的高度判断容差从 `0.15m` 缩小至 `0.10m`。
 - **降落高度安全**：在 `mission_params_new.yaml` 新增 `land_r/g/b_z`，使飞向降落点时有独立、安全的巡航高度。
 - **抓球容错机制**：在 `grabBall()` 增加了最大 3 次的服务重试逻辑，防止因瞬间通信故障导致的流程卡死。
+
+### 3.6 任务流与高度判定进一步优化
+- **解耦识别与抓球**：在 `mission_params_new.yaml` 新增 `grab_point_index` 参数。飞机现在会在 `a_point_index` 仅做悬停识别，之后飞往独立的 `grab_point_index` 航点执行抓球，大大提高了路线规划的灵活性。
+- **三维到达判定**：修改了 `distance()` 函数，将到达判定从纯 XY 平面（2D）升级为包含 Z 轴的 3D 距离计算（`sqrt(dx² + dy² + dz²)`），确保无人机在精准到达指定高度前不会过早触发下一步状态。

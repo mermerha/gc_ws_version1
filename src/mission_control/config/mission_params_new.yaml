@@ -4,8 +4,11 @@ mission_control:
   # 总航点数
   num_points: 5
   
-  # A区是第几个点 (在此点读取颜色并抓球)
+  # A区是第几个点 (在此点仅读取颜色)
   a_point_index: 2
+  
+  # 抓球区是第几个点 (在此点执行抓球动作)
+  grab_point_index: 3
   
   # B区是第几个点 (到达后飞向对应颜色的投球点)
   b_point_index: 5
