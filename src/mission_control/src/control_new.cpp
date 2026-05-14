@@ -481,8 +481,7 @@ private:
     double distance() {
         double dx = goal_with_id.goal[0] - position_3d.pose.position.x;
         double dy = goal_with_id.goal[1] - position_3d.pose.position.y;
-        double dz = goal_with_id.goal[2] - position_3d.pose.position.z;
-        return sqrt(dx * dx + dy * dy + dz * dz);
+        return sqrt(dx * dx + dy * dy);
     }
 };
 

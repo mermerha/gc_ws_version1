@@ -1,0 +1,26 @@
+<launch>
+    <!-- 设置仿真时间，使 RViz 同步播放 rosbag 的时间 -->
+    <param name="/use_sim_time" value="true" />
+
+    <!-- 启动 RViz 并加载配置文件 -->
+    <!-- 如果您之后保存了新的配置文件，请将下面的 default.rviz 替换为您的文件名 -->
+    <node name="rviz" pkg="rviz" type="rviz" args="-d $(find ego_planner)/launch/default.rviz" required="true" />
+
+    <!-- 实时生成蓝色无人机模型 -->
+    <node pkg="odom_visualization" name="odom_visualization" type="odom_visualization" output="screen">
+        <remap from="~odom" to="/ekf/ekf_odom" />
+        <param name="color/a" value="1.0"/>    
+        <param name="color/r" value="0.0"/>        
+        <param name="color/g" value="0.0"/>        
+        <param name="color/b" value="1.0"/> <!-- 蓝色 -->
+        <param name="robot_scale" value="1.0"/>
+        <!-- 如果 mesh 文件路径不同，请根据实际情况调整 -->
+        <param name="mesh_resource" value="package://odom_visualization/meshes/hummingbird.mesh"/>
+    </node>
+
+    <!-- 
+      使用说明：
+      1. 先运行：rosbag play --clock 您的数据包.bag
+      2. 再运行：roslaunch 0514play.launch (在此目录下运行)
+    -->
+</launch>

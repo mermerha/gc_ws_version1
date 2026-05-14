@@ -982,10 +982,10 @@ bool Controller::estimateThrustModel(
         // fflush(stdout);
       }
       const double hover_percentage = param.gra / thr2acc;
-      if (hover_percentage > 0.8 || hover_percentage < 0.1)
+      if (hover_percentage > 0.85 || hover_percentage < 0.1)
       {
-        ROS_ERROR("Estimated hover_percentage >0.8 or <0.1! Perhaps the accel vibration is too high!");
-        thr2acc = hover_percentage > 0.8 ? param.gra / 0.8 : thr2acc;
+        ROS_ERROR("Estimated hover_percentage >0.85 or <0.1! Perhaps the accel vibration is too high!");
+        thr2acc = hover_percentage > 0.85 ? param.gra / 0.85 : thr2acc;
         thr2acc = hover_percentage < 0.1 ? param.gra / 0.1 : thr2acc;
       }
       debug.hover_percentage = hover_percentage; // debug
