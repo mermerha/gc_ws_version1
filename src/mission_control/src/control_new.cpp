@@ -73,6 +73,9 @@ public:
         nh.param<float>("/mission_control/drop_b_y", drop_points[3].y, 0.0);
         nh.param<float>("/mission_control/drop_b_z", drop_point_heights[3], fallback_height);
         
+        // 抓球时下降高度
+        nh.param<float>("/mission_control/grab_height", grab_height, 0.8);
+
         // 投球时下降高度
         nh.param<float>("/mission_control/drop_height", drop_height, 0.6);
 
@@ -143,6 +146,7 @@ private:
     // [新] 投球与降落坐标
     Point drop_points[4];
     float drop_point_heights[4];
+    float grab_height;  // [新] 抓球时下降的目标高度
     float drop_height;
     Point color_endpoints[4]; 
     float land_point_heights[4]; // [新] 降落点独立高度
@@ -284,37 +288,86 @@ private:
     }
 
     /**
-     * [新] 抓球逻辑
+     * [修改] 抓球逻辑：下降 → 抓球 → 上升
+     *
+     * 阶段1 (grab_retries==0): 发送下降指令
+     * 阶段2 (grab_retries==1): 等待下降到位
+     * 阶段3 (grab_retries==2): 闭合夹爪
+     * 阶段4 (grab_retries==3): 等待夹爪动作完成
+     * 阶段5 (grab_retries==4): 上升到巡航高度
+     * 阶段6 (grab_retries==5): 等待上升到位
      */
     void grabBall() {
-        if (pub_flag) {
+        // 阶段1：发送下降指令
+        if (grab_retries == 0 && pub_flag) {
+            ROS_INFO("[GRAB_BALL] Descending to grab height %.2f...", grab_height);
+            goal_with_id.goal[2] = grab_height;  // 只修改Z轴，X/Y保持不变
+            goal_pub.publish(goal_with_id);
+            pub_flag = 0;
+            start_time = ros::Time::now();
+            grab_retries = 1;  // 进入阶段2
+        }
+
+        // 阶段2：等待下降到位
+        if (grab_retries == 1) {
+            double dz = fabs(position_3d.pose.position.z - grab_height);
+            bool at_height = (dz < 0.10);  // 高度容差10cm
+            bool timeout = (ros::Time::now() - start_time > ros::Duration(8.0));
+
+            if (at_height || timeout) {
+                if (timeout && !at_height) {
+                    ROS_WARN("[GRAB_BALL] Descent timeout, forcing grab at current height");
+                } else {
+                    ROS_INFO("[GRAB_BALL] Reached grab height, now grabbing...");
+                }
+                grab_retries = 2;  // 进入阶段3
+                pub_flag = 1;      // 触发夹爪闭合
+            }
+            return;  // 等待下降完成
+        }
+
+        // 阶段3：闭合夹爪
+        if (grab_retries == 2 && pub_flag) {
             ROS_INFO("[GRAB_BALL] Calling /claw/grab to grab the ball...");
             std_srvs::Trigger srv;
             if (claw_grab_client.call(srv) && srv.response.success) {
                 ROS_INFO("[GRAB_BALL] Grab success!");
-                pub_flag = 0;
-                start_time = ros::Time::now(); // 重置时间以等待动作完成
             } else {
                 ROS_WARN("[GRAB_BALL] Grab failed or service unavailable: %s", srv.response.message.c_str());
-                grab_retries++;
-                if (grab_retries >= 3) {
-                    ROS_ERROR("[GRAB_BALL] Failed 3 times, skipping grab and continuing mission.");
-                    pub_flag = 0;
-                    start_time = ros::Time::now();
-                } else {
-                    ROS_WARN("[GRAB_BALL] Retrying... (%d/3)", grab_retries);
-                    ros::Duration(0.5).sleep(); // 短暂延时后重试
-                    return; // 下一帧继续重试
-                }
             }
+            pub_flag = 0;
+            start_time = ros::Time::now();  // 重置时间以等待动作完成
+            grab_retries = 3;  // 进入等待阶段
         }
 
-        // 等待机械爪动作完成 (3秒)
-        if (ros::Time::now() - start_time > ros::Duration(3.0)) {
-            current_point_idx++;  // 继续下一个航点
-            pub_flag = 1;
+        // 阶段4：等待机械爪动作完成 (3秒)
+        if (grab_retries == 3 && ros::Time::now() - start_time > ros::Duration(3.0)) {
+            ROS_INFO("[GRAB_BALL] Claw action complete, ascending to cruise height...");
+            float cruise_height = waypoint_heights[current_point_idx];  // 当前航点的巡航高度
+            goal_with_id.goal[2] = cruise_height;
+            goal_pub.publish(goal_with_id);
             start_time = ros::Time::now();
-            state = State::NAVIGATING;
+            grab_retries = 4;  // 进入上升阶段
+        }
+
+        // 阶段5：等待上升到位
+        if (grab_retries == 4) {
+            float cruise_height = waypoint_heights[current_point_idx];
+            double dz = fabs(position_3d.pose.position.z - cruise_height);
+            bool at_height = (dz < 0.10);  // 高度容差10cm
+            bool timeout = (ros::Time::now() - start_time > ros::Duration(5.0));
+
+            if (at_height || timeout) {
+                if (timeout && !at_height) {
+                    ROS_WARN("[GRAB_BALL] Ascend timeout, continuing anyway");
+                } else {
+                    ROS_INFO("[GRAB_BALL] Reached cruise height, grab sequence complete");
+                }
+                current_point_idx++;  // 继续下一个航点
+                pub_flag = 1;
+                start_time = ros::Time::now();
+                state = State::NAVIGATING;
+            }
         }
     }
 

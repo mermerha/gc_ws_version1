@@ -1,7 +1,6 @@
-claw_control:
-  port: "/dev/ttyUSB0"
-  baudrate: 115200
-  servo_id: 0
-  angle_open: 0.0
-  angle_close: 50.0
-  move_interval: 2500
+port: "/dev/ttyUSB0"
+baudrate: 115200
+servo_id: 0
+angle_open: 25.0
+angle_close: 0.0
+move_interval: 2500

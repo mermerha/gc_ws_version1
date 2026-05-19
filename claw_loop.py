@@ -38,6 +38,8 @@ try:
     uart = serial.Serial(port=SERVO_PORT_NAME, baudrate=SERVO_BAUDRATE,
                          parity=serial.PARITY_NONE, stopbits=1,
                          bytesize=8, timeout=0)
+    uart.reset_input_buffer()
+    uart.reset_output_buffer()
     print("[OK] 串口打开成功: {}".format(SERVO_PORT_NAME))
 except serial.SerialException as e:
     print("[ERROR] 串口打开失败: {}".format(e))

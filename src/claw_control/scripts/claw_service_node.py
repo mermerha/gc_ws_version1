@@ -15,7 +15,7 @@ class ClawServiceNode:
         baudrate = rospy.get_param('~baudrate', 115200)
         self.servo_id      = rospy.get_param('~servo_id', 0)
         self.angle_open    = rospy.get_param('~angle_open', 0.0)
-        self.angle_close   = rospy.get_param('~angle_close', 50.0)
+        self.angle_close   = rospy.get_param('~angle_close', 25.0)
         self.move_interval = rospy.get_param('~move_interval', 2500)
 
         # [关键] 先注册 Service，再初始化硬件，避免时序问题
@@ -29,7 +29,9 @@ class ClawServiceNode:
             rospy.loginfo(f"[ClawService] Attempting to open port: {port}")
             self.uart = serial.Serial(port=port, baudrate=baudrate,
                                       parity=serial.PARITY_NONE,
-                                      stopbits=1, bytesize=8, timeout=0.1)
+                                      stopbits=1, bytesize=8, timeout=0)
+            self.uart.reset_input_buffer()
+            self.uart.reset_output_buffer()
 
             rospy.loginfo("[ClawService] Port opened successfully. Initializing Manager...")
             self.manager = UartServoManager(self.uart, is_scan_servo=False, is_debug=False)

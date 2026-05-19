@@ -50,6 +50,9 @@ mission_control:
   drop_b_y: 4.0
   drop_b_z: 1.2  # 飞向蓝区投球点时的巡航高度
   
+  # 抓球时下降的目标高度 (从巡航高度下降到此高度再抓球)
+  grab_height: 0.8
+
   # 投球时下降的目标高度
   drop_height: 0.6
   

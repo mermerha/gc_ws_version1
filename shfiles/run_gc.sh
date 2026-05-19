@@ -1,3 +1,10 @@
+# 关闭上次残留的 Color Detect 窗口
+if wmctrl -l 2>/dev/null | grep -q "Color Detect"; then
+    wmctrl -c "Color Detect"
+    sleep 1
+fi
+pkill -f "color_detect.launch" 2>/dev/null
+
 sudo chmod 777 /dev/tty* & sleep 1;
 roslaunch mavros px4.launch  & sleep 6;
 rosrun mavros mavcmd long 511 105 5000 0 0 0 0 0 & sleep 1;
