@@ -1,18 +1,11 @@
-# 关闭上次残留的 Color Detect 窗口
-if wmctrl -l 2>/dev/null | grep -q "Color Detect"; then
-    wmctrl -c "Color Detect"
-    sleep 1
-fi
-pkill -f "color_detect.launch" 2>/dev/null
-
 sudo chmod 777 /dev/tty* & sleep 1;
 roslaunch mavros px4.launch  & sleep 6;
 rosrun mavros mavcmd long 511 105 5000 0 0 0 0 0 & sleep 1;
 rosrun mavros mavcmd long 511 31 5000 0 0 0 0 0 & sleep 2;
 roslaunch faster_lio mapping_with_driver.launch & sleep 6;
 roslaunch px4ctrl run_ctrl.launch & sleep 2;
-roslaunch ego_planner run_in_exp_interactive.launch & sleep 2;
-roslaunch claw_control claw.launch & sleep 2;
+roslaunch ego_planner run_in_exp_interactive.launch & sleep 4;
+roslaunch claw_control claw.launch & sleep 4;
 
 chmod +x ~/magic_ws/src/opencv_detect/scripts/color_detect_node.py
 gnome-terminal --title="Color Detect" -- bash -c "cd ~/magic_ws && source devel/setup.bash && roslaunch opencv_detect color_detect.launch; exec bash" &
